@@ -120,11 +120,7 @@ https://drive.google.com/file/d/1u_q1S7tlkleZC6GOaxHaaXq2W5iUPn_L/view
 
 ## 👨‍💻 Author
 
-**Sakthivel S M**  
-AI Engineer | LLM | RAG | Backend Systems  
-
-🔗 LinkedIn: https://www.linkedin.com/in/callmedataman/  
-🔗 GitHub: https://github.com/SAKTHIVEL-SEENIVASANI  
+shreyas kocheri
 
 ---
 
