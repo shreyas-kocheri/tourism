@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard – Trinetra AI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Create Tourism / Emergency Post</h2>
+
+<textarea id="desc" placeholder="Post description"></textarea>
+
+<select id="state" onchange="loadDistricts()">
+  <option value="">Select State</option>
+  <option value="Tamil Nadu">Tamil Nadu</option>
+  <option value="Kerala">Kerala</option>
+</select>
+
+<select id="district"></select>
+
+<input type="file" id="image">
+<button onclick="createPost()">Post</button>
+
+<a href="feed.html">Go to Feed</a>
+
+<script src="script.js"></script>
+</body>
+</html>

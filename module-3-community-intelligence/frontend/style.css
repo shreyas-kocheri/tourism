@@ -1,0 +1,74 @@
+body { font-family: Arial; background:#f4f6f8; padding:20px; }
+h1,h2 { text-align:center; }
+.center { text-align:center; }
+
+.home-bg { background:#e3f2fd; }
+.home-buttons { text-align:center; margin-top:40px; }
+
+.btn {
+  padding:15px 25px;
+  background:#1976d2;
+  color:white;
+  text-decoration:none;
+  border-radius:6px;
+  margin:10px;
+}
+
+.card {
+  background:white;
+  width:420px;
+  margin:30px auto;
+  padding:20px;
+  border-radius:8px;
+}
+
+input, select, textarea, button {
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+}
+
+button {
+  background:#388e3c;
+  color:white;
+  border:none;
+  cursor:pointer;
+}
+
+.trust-box {
+  background:#fff3cd;
+  width:450px;
+  margin:20px auto;
+  padding:15px;
+  border-radius:6px;
+}
+
+.post {
+  background:white;
+  width:650px;
+  margin:20px auto;
+  padding:15px;
+  border-radius:8px;
+}
+
+.comment {
+  font-size:14px;
+  margin-left:10px;
+  margin-top:6px;
+}
+
+.reactions {
+  float:right;
+  color:#555;
+}
+
+.trusted {
+  color:green;
+  font-weight:bold;
+}
+
+.back {
+  display:block;
+  text-align:center;
+  margin-top:30px;
+}

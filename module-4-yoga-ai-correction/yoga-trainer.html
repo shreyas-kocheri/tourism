@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TRINETRA – AI Yoga Trainer</title>
+    <meta charset="utf-8">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 40px;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-icon {
+            font-size: 36px;
+            color: #ffde59;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 36px;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .tagline {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 300;
+            font-size: 18px;
+            margin-top: 8px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 30px;
+            gap: 30px;
+        }
+
+        .left-panel {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .right-panel {
+            flex: 1.5;
+            min-width: 400px;
+        }
+
+        /* Controls */
+        .controls {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-start {
+            background: linear-gradient(90deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn-stop {
+            background: linear-gradient(90deg, #ff6b6b 0%, #ff5252 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Pose Selection */
+        .pose-selection {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .pose-selection h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 20px;
+            color: #444;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pose-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .pose-option {
+            background: #f8f9ff;
+            border: 2px solid #e6e9ff;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .pose-option:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .pose-option.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Camera View */
+        .camera-container {
+            background: #1a1a2e;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .camera-view {
+            position: relative;
+            width: 100%;
+        }
+
+        #video, #output {
+            width: 100%;
+            display: block;
+            border-radius: 16px;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 0 0 16px 16px;
+            font-size: 14px;
+        }
+
+        /* Feedback Section */
+        .feedback-container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            height: 100%;
+        }
+
+        .pose-info {
+            background: linear-gradient(90deg, #f8f9ff 0%, #f0f3ff 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid #667eea;
+        }
+
+        .pose-name {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .pose-accuracy {
+            font-size: 16px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .accuracy-bar {
+            flex-grow: 1;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .accuracy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .status-active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-inactive {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .feedback-list {
+            list-style: none;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .feedback-list li {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 4px solid #ff6b6b;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .feedback-list li:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .feedback-list li.good {
+            border-left-color: #4CAF50;
+        }
+
+        .feedback-icon {
+            font-size: 18px;
+            margin-top: 2px;
+            color: #667eea;
+        }
+
+        .feedback-list li.good .feedback-icon {
+            color: #4CAF50;
+        }
+
+        /* Project Credit */
+        .project-credit {
+            background: linear-gradient(90deg, #f8f9ff 0%, #f0f3ff 100%);
+            padding: 20px;
+            text-align: center;
+            margin-top: 25px;
+            border-radius: 16px;
+            border-top: 3px solid #667eea;
+        }
+
+        .project-credit h4 {
+            font-family: 'Montserrat', sans-serif;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .project-credit p {
+            color: #666;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .tech-tags {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .tech-tag {
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .left-panel, .right-panel {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 28px;
+            }
+            
+            .control-buttons {
+                flex-direction: column;
+            }
+            
+            .pose-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pose-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                padding: 14px 20px;
+                font-size: 15px;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .feedback-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .feedback-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .feedback-list::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .feedback-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🧘</div>
+                <h1>TRINETRA – AI Yoga Trainer</h1>
+            </div>
+            <p class="tagline">Real-time AI Yoga Posture Correction using Computer Vision</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Panel -->
+            <div class="left-panel">
+                <!-- Controls -->
+                <div class="controls">
+                    <h3><i class="fas fa-video"></i> Yoga Session Control</h3>
+                    <div class="control-buttons">
+                        <button class="btn btn-start" onclick="startCamera()">
+                            <i class="fas fa-play-circle"></i> Start Yoga Session
+                        </button>
+                        <button class="btn btn-stop" onclick="stopCamera()">
+                            <i class="fas fa-stop-circle"></i> End Session
+                        </button>
+                    </div>
+                    <p style="color: #666; font-size: 14px; text-align: center;">
+                        <i class="fas fa-lightbulb"></i> Ensure good lighting and full body visibility for best results
+                    </p>
+                </div>
+
+                <!-- Pose Selection -->
+                <div class="pose-selection">
+                    <h3><i class="fas fa-spa"></i> Select Yoga Pose</h3>
+                    <div class="pose-options">
+                        <div class="pose-option active" onclick="selectPose('tree')">🌳 Tree Pose</div>
+                        <div class="pose-option" onclick="selectPose('warrior2')">⚔️ Warrior II</div>
+                        <div class="pose-option" onclick="selectPose('downwardDog')">🐕 Downward Dog</div>
+                        <div class="pose-option" onclick="selectPose('mountain')">⛰️ Mountain Pose</div>
+                        <div class="pose-option" onclick="selectPose('chair')">💺 Chair Pose</div>
+                    </div>
+                </div>
+
+                <!-- Project Credit -->
+                <div class="project-credit">
+                    <h4><i class="fas fa-award"></i> Project TRINETRA</h4>
+                    <p>Advanced AI-powered yoga posture analysis system using real-time computer vision technology for accurate pose correction and guidance.</p>
+                    <div class="tech-tags">
+                        <span class="tech-tag">MediaPipe Pose</span>
+                        <span class="tech-tag">Computer Vision</span>
+                        <span class="tech-tag">Real-time Analysis</span>
+                        <span class="tech-tag">AI Trainer</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <!-- Camera View -->
+                <div class="camera-container">
+                    <div class="camera-view">
+                        <video id="video" width="640" height="480" autoplay playsinline></video>
+                        <canvas id="output" width="640" height="480"></canvas>
+                        <div class="camera-overlay">
+                            <i class="fas fa-eye"></i> Real-time Pose Detection Active
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Section -->
+                <div class="feedback-container">
+                    <div class="pose-info">
+                        <div class="pose-name" id="poseName">Tree Pose (Vrikshasana)</div>
+                        <div class="pose-accuracy">
+                            <span>Accuracy:</span>
+                            <div class="accuracy-bar">
+                                <div class="accuracy-fill" id="accuracyFill" style="width: 0%"></div>
+                            </div>
+                            <span id="accuracyText">0%</span>
+                        </div>
+                        <div id="status" class="status status-inactive">
+                            <i class="fas fa-power-off"></i> Session Not Started
+                        </div>
+                    </div>
+
+                    <h3 style="margin-bottom: 20px; color: #444;">
+                        <i class="fas fa-comment-medical"></i> Real-time Feedback
+                    </h3>
+                    <ul class="feedback-list" id="feedbackList">
+                        <li>
+                            <div class="feedback-icon"><i class="fas fa-info-circle"></i></div>
+                            <div>Click "Start Yoga Session" to begin AI-powered pose analysis and receive real-time feedback.</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pose reference configurations
+        const poseConfigs = {
+            'tree': {
+                name: 'Tree Pose (Vrikshasana)',
+                angles: {
+                    right_knee_angle: { min: 45, max: 90, joints: [24, 26, 28] },
+                    left_knee_angle: { min: 170, max: 190, joints: [23, 25, 27] },
+                    right_hip_angle: { min: 160, max: 190, joints: [12, 24, 26] },
+                    balance_symmetry: { min: -10, max: 10 }
+                },
+                feedback: {
+                    good: "Excellent balance and alignment!",
+                    adjust_knee: "Bend your right knee more",
+                    straighten_leg: "Keep left leg straight",
+                    balance: "Shift weight to center"
+                }
+            },
+            'warrior2': {
+                name: 'Warrior II (Virabhadrasana II)',
+                angles: {
+                    front_knee_angle: { min: 85, max: 105, joints: [23, 25, 27] },
+                    back_leg_angle: { min: 150, max: 180, joints: [24, 26, 28] },
+                    torso_alignment: { min: 80, max: 100, joints: [12, 24, 23] },
+                    arm_alignment: { min: 160, max: 180, joints: [12, 14, 16] }
+                },
+                feedback: {
+                    good: "Strong and stable warrior stance!",
+                    front_knee: "Bend front knee to 90 degrees",
+                    back_leg: "Straighten back leg",
+                    arms: "Extend arms parallel to ground",
+                    torso: "Keep torso centered"
+                }
+            },
+            'downwardDog': {
+                name: 'Downward Facing Dog (Adho Mukha Svanasana)',
+                angles: {
+                    hip_angle: { min: 60, max: 90, joints: [12, 24, 26] },
+                    knee_angle: { min: 170, max: 180, joints: [24, 26, 28] },
+                    shoulder_angle: { min: 160, max: 180, joints: [12, 14, 16] },
+                    spine_alignment: { min: 150, max: 180, joints: [12, 24, 26] }
+                },
+                feedback: {
+                    good: "Perfect inverted V shape formation!",
+                    hips: "Lift hips higher",
+                    legs: "Straighten legs",
+                    arms: "Press palms firmly",
+                    spine: "Lengthen your spine"
+                }
+            },
+            'mountain': {
+                name: 'Mountain Pose (Tadasana)',
+                angles: {
+                    knee_angle: { min: 170, max: 190, joints: [23, 25, 27] },
+                    hip_angle: { min: 170, max: 190, joints: [12, 24, 26] },
+                    shoulder_angle: { min: 170, max: 190, joints: [12, 14, 16] },
+                    alignment: { min: -5, max: 5 }
+                },
+                feedback: {
+                    good: "Perfect mountain alignment achieved!",
+                    posture: "Stand tall, crown reaching up",
+                    shoulders: "Relax shoulders down",
+                    feet: "Ground through all four corners of feet",
+                    engage: "Engage thigh muscles"
+                }
+            },
+            'chair': {
+                name: 'Chair Pose (Utkatasana)',
+                angles: {
+                    knee_angle: { min: 75, max: 95, joints: [23, 25, 27] },
+                    hip_angle: { min: 75, max: 95, joints: [12, 24, 23] },
+                    torso_angle: { min: 45, max: 75, joints: [12, 24, 26] },
+                    arm_angle: { min: 160, max: 180, joints: [12, 14, 16] }
+                },
+                feedback: {
+                    good: "Strong and stable chair position!",
+                    depth: "Sit deeper into imaginary chair",
+                    knees: "Keep knees behind toes",
+                    back: "Lean torso forward slightly",
+                    arms: "Reach arms up alongside ears"
+                }
+            }
+        };
+
+        // DOM Elements
+        const video = document.getElementById('video');
+        const outputCanvas = document.getElementById('output');
+        const ctx = outputCanvas.getContext('2d');
+        const poseNameElement = document.getElementById('poseName');
+        const statusElement = document.getElementById('status');
+        const feedbackListElement = document.getElementById('feedbackList');
+        const accuracyFillElement = document.getElementById('accuracyFill');
+        const accuracyTextElement = document.getElementById('accuracyText');
+
+        // Global variables
+        let poseDetector = null;
+        let camera = null;
+        let currentPose = 'tree';
+        let lastLandmarks = null;
+
+        // Initialize MediaPipe Pose
+        async function initializePoseDetector() {
+            poseDetector = new Pose({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+            });
+
+            poseDetector.setOptions({
+                modelComplexity: 1,
+                smoothLandmarks: true,
+                enableSegmentation: false,
+                smoothSegmentation: true,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+
+            poseDetector.onResults(onResults);
+        }
+
+        // Start camera
+        async function startCamera() {
+            try {
+                statusElement.textContent = "Starting yoga session...";
+                statusElement.className = "status status-inactive";
+                
+                if (!poseDetector) {
+                    await initializePoseDetector();
+                }
+
+                camera = new Camera(video, {
+                    onFrame: async () => {
+                        if (poseDetector) {
+                            await poseDetector.send({ image: video });
+                        }
+                    },
+                    width: 640,
+                    height: 480
+                });
+                
+                await camera.start();
+                statusElement.innerHTML = '<i class="fas fa-check-circle"></i> Session Active - Analyzing Pose';
+                statusElement.className = "status status-active";
+            } catch (error) {
+                console.error("Camera error:", error);
+                statusElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Session Error: ${error.message}`;
+                statusElement.className = "status status-inactive";
+            }
+        }
+
+        // Stop camera
+        function stopCamera() {
+            if (camera) {
+                camera.stop();
+                camera = null;
+            }
+            statusElement.innerHTML = '<i class="fas fa-pause-circle"></i> Session Ended';
+            statusElement.className = "status status-inactive";
+            feedbackListElement.innerHTML = `
+                <li>
+                    <div class="feedback-icon"><i class="fas fa-info-circle"></i></div>
+                    <div>Session ended. Ready for your next yoga practice. Click "Start Yoga Session" to begin again.</div>
+                </li>
+            `;
+            accuracyFillElement.style.width = '0%';
+            accuracyTextElement.textContent = '0%';
+        }
+
+        // Select pose
+        function selectPose(pose) {
+            currentPose = pose;
+            poseNameElement.textContent = poseConfigs[pose].name;
+            
+            // Update active button
+            document.querySelectorAll('.pose-option').forEach(el => {
+                el.classList.remove('active');
+                if (el.getAttribute('onclick').includes(pose)) {
+                    el.classList.add('active');
+                }
+            });
+            
+            // Clear previous feedback
+            if (lastLandmarks) {
+                analyzePose(lastLandmarks);
+            }
+        }
+
+        // Process results
+        function onResults(results) {
+            ctx.save();
+            ctx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+            ctx.drawImage(results.image, 0, 0, outputCanvas.width, outputCanvas.height);
+            
+            if (results.poseLandmarks) {
+                drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
+                    color: '#00FF00',
+                    lineWidth: 3
+                });
+                drawLandmarks(ctx, results.poseLandmarks, {
+                    color: '#FF3366',
+                    lineWidth: 2,
+                    radius: 6
+                });
+                
+                lastLandmarks = results.poseLandmarks;
+                analyzePose(results.poseLandmarks);
+            }
+            
+            ctx.restore();
+        }
+
+        // Calculate angle between three points
+        function calculateAngle(a, b, c) {
+            const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+            let angle = Math.abs(radians * 180.0 / Math.PI);
+            if (angle > 180.0) {
+                angle = 360 - angle;
+            }
+            return angle;
+        }
+
+        // Analyze pose and give feedback
+        function analyzePose(landmarks) {
+            const config = poseConfigs[currentPose];
+            const feedback = [];
+            let detectedCount = 0;
+            let totalChecks = Object.keys(config.angles).length;
+
+            for (const [angleName, angleConfig] of Object.entries(config.angles)) {
+                let currentAngle;
+                
+                if (angleName.includes('symmetry') || angleName.includes('alignment')) {
+                    // Special case for balance/alignment checks
+                    if (angleName === 'balance_symmetry') {
+                        const leftHipY = landmarks[23].y;
+                        const rightHipY = landmarks[24].y;
+                        currentAngle = (leftHipY - rightHipY) * 100;
+                    } else if (angleName === 'alignment') {
+                        const shoulderX = landmarks[12].x;
+                        const hipX = landmarks[24].x;
+                        const ankleX = landmarks[28].x;
+                        currentAngle = (shoulderX + hipX + ankleX) / 3 - hipX * 100;
+                    }
+                } else {
+                    // Normal angle calculation
+                    const [joint1, joint2, joint3] = angleConfig.joints;
+                    currentAngle = calculateAngle(
+                        landmarks[joint1],
+                        landmarks[joint2],
+                        landmarks[joint3]
+                    );
+                }
+
+                // Check if angle is within range
+                if (currentAngle >= angleConfig.min && currentAngle <= angleConfig.max) {
+                    detectedCount++;
+                } else {
+                    // Provide specific feedback
+                    let message = "";
+                    if (currentAngle < angleConfig.min) {
+                        message = `${getFeedbackForAngle(angleName, 'too_small')} (Current: ${Math.round(currentAngle)}°, Target: ${angleConfig.min}-${angleConfig.max}°)`;
+                    } else {
+                        message = `${getFeedbackForAngle(angleName, 'too_large')} (Current: ${Math.round(currentAngle)}°, Target: ${angleConfig.min}-${angleConfig.max}°)`;
+                    }
+                    feedback.push(message);
+                }
+            }
+
+            // Update UI
+            const accuracy = Math.round((detectedCount / totalChecks) * 100);
+            poseNameElement.textContent = `${config.name}`;
+            accuracyFillElement.style.width = `${accuracy}%`;
+            accuracyTextElement.textContent = `${accuracy}%`;
+            
+            feedbackListElement.innerHTML = '';
+            
+            if (accuracy === 100) {
+                const li = document.createElement('li');
+                li.className = 'good';
+                li.innerHTML = `
+                    <div class="feedback-icon"><i class="fas fa-check-circle"></i></div>
+                    <div>
+                        <strong>Perfect Pose!</strong> ${config.feedback.good}
+                        <br><small style="color: #4CAF50;">All angles within optimal range</small>
+                    </div>
+                `;
+                feedbackListElement.appendChild(li);
+            } else if (accuracy > 70) {
+                const li = document.createElement('li');
+                li.className = 'good';
+                li.innerHTML = `
+                    <div class="feedback-icon"><i class="fas fa-thumbs-up"></i></div>
+                    <div>
+                        <strong>Good Form!</strong> ${accuracy}% accuracy. Keep adjusting:
+                    </div>
+                `;
+                feedbackListElement.appendChild(li);
+            } else {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="feedback-icon"><i class="fas fa-adjust"></i></div>
+                    <div>
+                        <strong>Let's Improve:</strong> ${accuracy}% accuracy. Focus on these adjustments:
+                    </div>
+                `;
+                feedbackListElement.appendChild(li);
+            }
+            
+            if (feedback.length > 0) {
+                feedback.forEach(msg => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div class="feedback-icon"><i class="fas fa-lightbulb"></i></div>
+                        <div>${msg}</div>
+                    `;
+                    feedbackListElement.appendChild(li);
+                });
+            }
+        }
+
+        // Get feedback message for specific angles
+        function getFeedbackForAngle(angleName, issue) {
+            const config = poseConfigs[currentPose];
+            
+            switch(angleName) {
+                case 'right_knee_angle':
+                case 'front_knee_angle':
+                case 'knee_angle':
+                    return issue === 'too_small' ? "Bend your knee more" : "Straighten your knee slightly";
+                
+                case 'left_knee_angle':
+                case 'back_leg_angle':
+                    return issue === 'too_small' ? "Straighten your leg more" : "Your leg is too straight";
+                
+                case 'hip_angle':
+                    return issue === 'too_small' ? "Lower your hips" : "Raise your hips";
+                
+                case 'shoulder_angle':
+                case 'arm_angle':
+                    return issue === 'too_small' ? "Extend your arm more" : "Bend your arm slightly";
+                
+                case 'balance_symmetry':
+                    return "Shift weight to center for better balance";
+                
+                case 'alignment':
+                    return "Align shoulders over hips over ankles";
+                
+                default:
+                    return "Adjust your position";
+            }
+        }
+
+        // MediaPipe drawing utilities
+        const POSE_CONNECTIONS = [
+            [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8],
+            [9, 10], [11, 12], [11, 13], [13, 15], [15, 17], [15, 19], [15, 21],
+            [17, 19], [12, 14], [14, 16], [16, 18], [16, 20], [16, 22], [18, 20],
+            [11, 23], [12, 24], [23, 24], [23, 25], [24, 26], [25, 27], [26, 28],
+            [27, 29], [27, 31], [28, 30], [28, 32], [29, 31], [30, 32]
+        ];
+
+        function drawLandmarks(ctx, landmarks, options) {
+            const { color = '#FF3366', lineWidth = 2, radius = 6 } = options;
+            ctx.fillStyle = color;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+
+            landmarks.forEach(landmark => {
+                if (landmark.visibility > 0.1) {
+                    const x = landmark.x * outputCanvas.width;
+                    const y = landmark.y * outputCanvas.height;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // Add glow effect
+                    ctx.shadowColor = color;
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            });
+        }
+
+        function drawConnectors(ctx, landmarks, connections, options) {
+            const { color = '#00FF00', lineWidth = 3 } = options;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            connections.forEach(connection => {
+                const [start, end] = connection;
+                const startLandmark = landmarks[start];
+                const endLandmark = landmarks[end];
+                
+                if (startLandmark.visibility > 0.1 && endLandmark.visibility > 0.1) {
+                    ctx.beginPath();
+                    ctx.moveTo(
+                        startLandmark.x * outputCanvas.width,
+                        startLandmark.y * outputCanvas.height
+                    );
+                    ctx.lineTo(
+                        endLandmark.x * outputCanvas.width,
+                        endLandmark.y * outputCanvas.height
+                    );
+                    ctx.stroke();
+                    
+                    // Add glow effect
+                    ctx.shadowColor = color;
+                    ctx.shadowBlur = 8;
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                }
+            });
+        }
+
+        // Initialize on load
+        window.onload = async () => {
+            await initializePoseDetector();
+            poseNameElement.textContent = poseConfigs[currentPose].name;
+            statusElement.innerHTML = '<i class="fas fa-power-off"></i> Ready to Start Yoga Session';
+        };
+    </script>
+</body>
+</html>
